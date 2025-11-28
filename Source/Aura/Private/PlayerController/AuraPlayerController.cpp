@@ -5,6 +5,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "Net/Core/Misc/NetCVars.h"
 #include "EnhancedInputComponent.h"
+#include "Interface/EnemyInterface.h"
+
 AAuraPlayerController::AAuraPlayerController()
 {
 	bReplicates=true;
@@ -32,6 +34,40 @@ void AAuraPlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
 }
 
+void AAuraPlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+	CursorTrace();
+}
+
+void AAuraPlayerController::CursorTrace()
+{
+	FHitResult CursorHit;
+	GetHitResultUnderCursor(ECC_Visibility,false,CursorHit);
+	if (!CursorHit.bBlockingHit) return;
+	LastActor=ThisActor;
+	ThisActor=Cast<IEnemyInterface>(CursorHit.GetActor());
+if (LastActor)
+{
+	if (ThisActor)
+	{
+		if (LastActor==ThisActor) {}
+		else
+		{
+			LastActor->UnHighLightActor();
+			ThisActor->HighLightActor();
+		}
+	}
+	else
+	{
+		LastActor->UnHighLightActor();
+	}
+}
+else{
+		if (ThisActor){ThisActor->HighLightActor();}
+		else{}
+	}
+}
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
@@ -47,3 +83,4 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
 	}
 }
+
